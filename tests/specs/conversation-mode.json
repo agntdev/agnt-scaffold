@@ -1,5 +1,21 @@
 [
   {
+    "name": "Chat is available from the main menu and clears its history",
+    "steps": [
+      { "send": { "text": "/start", "userId": 101, "chatId": 101 }, "expect": [{ "method": "sendMessage", "payload": { "text": "Build a project scaffold or request a focused code snippet." } }] },
+      { "send": { "callback": "chat:open", "userId": 101, "chatId": 101 }, "expect": [{ "method": "answerCallbackQuery" }, { "method": "sendMessage", "payload": { "text": "Chat is ready. Send a message to discuss an idea, ask a question, or think something through." } }] },
+      { "send": { "callback": "chat:clear", "userId": 101, "chatId": 101 }, "expect": [{ "method": "answerCallbackQuery" }, { "method": "sendMessage", "payload": { "text": "Your chat history is cleared." } }] }
+    ]
+  },
+  {
+    "name": "Chat command opens freeform mode and Agent keeps the conversation intact",
+    "steps": [
+      { "send": { "text": "/chat", "userId": 102, "chatId": 102 }, "expect": [{ "method": "sendMessage", "payload": { "text": "Chat is ready. Send a message to discuss an idea, ask a question, or think something through." } }] },
+      { "send": { "callback": "chat:agent", "userId": 102, "chatId": 102 }, "expect": [{ "method": "answerCallbackQuery" }, { "method": "sendMessage", "payload": { "text": "Execution Mode is on. Tell me whether you want a project scaffold or a code snippet." } }] },
+      { "send": { "text": "/clear", "userId": 102, "chatId": 102 }, "expect": [{ "method": "sendMessage", "payload": { "text": "Your chat history is cleared." } }] }
+    ]
+  },
+  {
     "name": "Conversation Mode is the default for an exploratory message",
     "steps": [
       {

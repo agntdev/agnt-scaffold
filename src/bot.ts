@@ -8,6 +8,8 @@ import type { StorageAdapter } from "grammy";
 export interface Session {
   step?: string;
   mode?: "conversation" | "execution";
+  /** True only while the user has explicitly opened freeform Chat. */
+  chatActive?: boolean;
   detectedLocale?: "hinglish";
   conversationContext?: Array<{ text: string; at: number }>;
   awaitingExecutionApproval?: boolean;

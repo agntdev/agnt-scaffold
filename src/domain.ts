@@ -45,6 +45,11 @@ export interface NluMetrics {
   humanQualityCount: number;
 }
 export interface BuildMetrics { successful: number; failed: number; feedback: number; }
+export interface ConversationTurn {
+  role: "user" | "assistant";
+  text: string;
+  at: number;
+}
 
 const defaults: OwnerSettings = {
   languages: ["TypeScript", "Python", "Go"],
@@ -98,6 +103,26 @@ async function write<T>(key: string, value: T): Promise<void> {
 function projectKey(id: string) { return `project:${id}`; }
 function userIndex(owner: string) { return `owner:${owner}:projects`; }
 function userSettingsKey(owner: string) { return `user:${owner}:settings`; }
+function conversationKey(owner: string) { return `user:${owner}:conversation`; }
+
+/**
+ * Freeform Chat is durable, but deliberately short lived. Reads prune expired
+ * turns and callers keep the prompt bounded, so one user cannot grow an
+ * unbounded record or leak stale context into a new discussion.
+ */
+export async function conversationFor(owner: string, instant: number): Promise<ConversationTurn[]> {
+  const cutoff = instant - 24 * 60 * 60 * 1000;
+  const turns = (await read<ConversationTurn[]>(conversationKey(owner))) ?? [];
+  const active = turns.filter((turn) => turn.at >= cutoff);
+  if (active.length !== turns.length) await write(conversationKey(owner), active);
+  return active;
+}
+export async function saveConversation(owner: string, turns: ConversationTurn[]): Promise<void> {
+  await write(conversationKey(owner), turns.slice(-24));
+}
+export async function clearConversation(owner: string): Promise<void> {
+  await write(conversationKey(owner), []);
+}
 
 export async function userLocale(owner: string): Promise<"english" | "hinglish"> {
   return (await read<UserSettings>(userSettingsKey(owner)))?.locale ?? "english";

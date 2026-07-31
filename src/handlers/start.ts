@@ -14,8 +14,8 @@ const composer = new Composer<Ctx>();
 async function menu(ctx: Ctx) {
   const l = await locale(ctx);
   return inlineKeyboard([
-    [inlineButton("Start task", "agent:start"), inlineButton(tr(l, "newProject", "New project"), "project:new")],
-    [inlineButton(tr(l, "snippet", "Code snippet"), "snippet:request")],
+    [inlineButton(tr(l, "newProject", "New project"), "project:new"), inlineButton(tr(l, "snippet", "Code snippet"), "snippet:request")],
+    [inlineButton("Chat", "chat:open"), inlineButton("Start task", "agent:start")],
     [inlineButton(tr(l, "revision", "Request revision"), "revision:request"), inlineButton(tr(l, "language", "Language"), "language:choose")],
     [inlineButton(tr(l, "settings", "Team settings"), "owner:settings")],
     [inlineButton(tr(l, "helpButton", "Help"), "menu:help")],

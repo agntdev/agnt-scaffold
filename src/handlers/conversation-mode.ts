@@ -1,10 +1,13 @@
 import { Composer } from "grammy";
 import type { Ctx } from "../bot.js";
 import { now } from "../clock.js";
-import { recordModeChange, recordNluObservation } from "../domain.js";
+import { clearConversation, conversationFor, recordModeChange, recordNluObservation, saveConversation, type ConversationTurn } from "../domain.js";
+import { generateNemotronConversation } from "../nemotron.js";
 import { classifyInput, type NluResult } from "../nlu.js";
 import { beginProject } from "./newproject.js";
 import { beginSnippet } from "./snippet-request.js";
+import { startTask } from "./agent.js";
+import { inlineButton, inlineKeyboard } from "../toolkit/index.js";
 
 const composer = new Composer<Ctx>();
 
@@ -12,6 +15,51 @@ function remember(ctx: Ctx, text: string) {
   const cutoff = now().getTime() - 24 * 60 * 60 * 1000;
   const recent = (ctx.session.conversationContext ?? []).filter((item) => item.at >= cutoff);
   ctx.session.conversationContext = [...recent, { text, at: now().getTime() }].slice(-20);
+}
+
+function chatKeyboard() {
+  return inlineKeyboard([
+    [inlineButton("Clear conversation", "chat:clear")],
+    [inlineButton("Switch to Agent/Task mode", "chat:agent")],
+    [inlineButton("Main menu", "menu:main")],
+  ]);
+}
+
+async function chatHistory(ctx: Ctx): Promise<ConversationTurn[]> {
+  if (!ctx.from) return [];
+  return conversationFor(String(ctx.from.id), now().getTime());
+}
+
+async function openChat(ctx: Ctx) {
+  ctx.session.mode = "conversation";
+  ctx.session.chatActive = true;
+  ctx.session.awaitingExecutionApproval = undefined;
+  const history = await chatHistory(ctx);
+  await ctx.reply(history.length
+    ? "Chat is ready. I’ve kept the last day of this conversation in context."
+    : "Chat is ready. Send a message to discuss an idea, ask a question, or think something through.",
+  { reply_markup: chatKeyboard() });
+}
+
+async function replyInChat(ctx: Ctx, text: string) {
+  if (!ctx.from) return;
+  const prior = await chatHistory(ctx);
+  const turns: ConversationTurn[] = [...prior, { role: "user", text, at: now().getTime() }];
+  await ctx.replyWithChatAction("typing");
+  let answer: string | undefined;
+  try {
+    answer = await generateNemotronConversation(ctx, turns);
+  } catch {
+    answer = undefined;
+  }
+  if (!answer) {
+    await saveConversation(String(ctx.from.id), turns);
+    await ctx.reply("Chat is temporarily unavailable. Try again in a moment.", { reply_markup: chatKeyboard() });
+    return;
+  }
+  const complete = [...turns, { role: "assistant" as const, text: answer, at: now().getTime() }];
+  await saveConversation(String(ctx.from.id), complete);
+  await ctx.reply(answer, { reply_markup: chatKeyboard() });
 }
 
 async function enterExecution(ctx: Ctx, reason: string) {
@@ -66,6 +114,13 @@ composer.on("message:text", async (ctx, next) => {
   const text = ctx.message.text.trim();
   if (!text || text.startsWith("/") || ctx.session.step) return next();
 
+  // Explicit Chat is deliberately not an intent router: a user can discuss
+  // anything naturally without being pushed into the project wizard.
+  if (ctx.session.chatActive) {
+    await replyInChat(ctx, text);
+    return;
+  }
+
   const nlu = classifyInput(text);
   const lowConfidence = nlu.confidence < 0.6 || nlu.intent === "unknown";
   await recordNluObservation(nlu.language, nlu.confidence, lowConfidence);
@@ -100,6 +155,24 @@ composer.on("message:text", async (ctx, next) => {
     return;
   }
   await conversationalReply(ctx, text, nlu);
+});
+
+composer.command("chat", openChat);
+composer.command("clear", async (ctx) => {
+  if (ctx.from) await clearConversation(String(ctx.from.id));
+  ctx.session.conversationContext = [];
+  await ctx.reply("Your chat history is cleared.", { reply_markup: chatKeyboard() });
+});
+composer.callbackQuery("chat:open", async (ctx) => { await ctx.answerCallbackQuery(); await openChat(ctx); });
+composer.callbackQuery("chat:clear", async (ctx) => {
+  await ctx.answerCallbackQuery();
+  if (ctx.from) await clearConversation(String(ctx.from.id));
+  ctx.session.conversationContext = [];
+  await ctx.reply("Your chat history is cleared.", { reply_markup: chatKeyboard() });
+});
+composer.callbackQuery("chat:agent", async (ctx) => {
+  await ctx.answerCallbackQuery();
+  await startTask(ctx);
 });
 
 export default composer;

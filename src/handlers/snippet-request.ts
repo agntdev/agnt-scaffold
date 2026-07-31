@@ -23,6 +23,7 @@ export async function beginSnippet(ctx: Ctx, announce = true) {
   const from = ctx.session.mode ?? "conversation";
   if (announce) await ctx.reply("Switching to Execution Mode to generate your code snippet.");
   ctx.session.mode = "execution";
+  ctx.session.chatActive = false;
   if (ctx.from && from !== "execution") await recordModeChange({ owner: String(ctx.from.id), from, to: "execution", timestamp: now().getTime(), reason: "snippet request" });
   ctx.session.awaitingExecutionApproval = undefined;
   ctx.session.step = "snippet:type";

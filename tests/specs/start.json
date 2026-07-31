@@ -7,7 +7,7 @@
         "expect": [
           {
             "method": "sendMessage",
-            "payload": { "text": "Build a project scaffold or request a focused code snippet." }
+            "payload": { "text": "Build a project scaffold or request a focused code snippet.", "reply_markup": { "inline_keyboard": [[{"text":"New project","callback_data":"project:new"},{"text":"Code snippet","callback_data":"snippet:request"}],[{"text":"Chat","callback_data":"chat:open"},{"text":"Start task","callback_data":"agent:start"}],[{"text":"Request revision","callback_data":"revision:request"},{"text":"Language","callback_data":"language:choose"}],[{"text":"Team settings","callback_data":"owner:settings"}],[{"text":"Help","callback_data":"menu:help"}] ] } }
           }
         ]
       }

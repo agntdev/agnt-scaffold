@@ -11,6 +11,7 @@ export async function beginRevision(ctx: Ctx, announce = true) {
   const from = ctx.session.mode ?? "conversation";
   if (announce) await ctx.reply("Switching to Execution Mode to revise your project.");
   ctx.session.mode = "execution";
+  ctx.session.chatActive = false;
   if (ctx.from && from !== "execution") await recordModeChange({ owner: String(ctx.from.id), from, to: "execution", timestamp: now().getTime(), reason: "revision request" });
   if (!ctx.from) return;
   const projects = await projectsFor(String(ctx.from.id), now().getTime());
