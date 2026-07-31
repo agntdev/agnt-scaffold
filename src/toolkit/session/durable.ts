@@ -43,6 +43,8 @@ export interface WorkerEnv {
   BOT_TELEMETRY_URL?: string;
   BOT_TELEMETRY_SECRET?: string;
   BOT_TELEMETRY_SALT?: string;
+  /** NVIDIA API credential. Inject as a Worker secret; never log or persist it. */
+  NEMOTRON_3_ULTRA_API_KEY?: string;
 }
 
 interface Reminder {
