@@ -49,5 +49,16 @@
         ]
       }
     ]
+  },
+  {
+    "name": "An ambiguous Hinglish request gets a concise clarification",
+    "steps": [
+      {
+        "send": { "text": "kuch banana hai" },
+        "expect": [
+          { "method": "sendMessage", "payload": { "text": "Main context samajhna chahta hoon. Project scaffold chahiye, code snippet, ya pehle idea discuss karein?" } }
+        ]
+      }
+    ]
   }
 ]
