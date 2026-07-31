@@ -23,6 +23,8 @@ async function menu(ctx: Ctx) {
 async function welcome(ctx: Ctx) { const l = await locale(ctx); return tr(l, "welcome", "Build a project scaffold or request a focused code snippet."); }
 
 composer.command("start", async (ctx) => {
+  ctx.session.mode = "conversation";
+  ctx.session.awaitingExecutionApproval = undefined;
   await ctx.reply(await welcome(ctx), { reply_markup: await menu(ctx) });
 });
 

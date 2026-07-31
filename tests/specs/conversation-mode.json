@@ -1,0 +1,53 @@
+[
+  {
+    "name": "Conversation Mode is the default for an exploratory message",
+    "steps": [
+      {
+        "send": { "text": "I am considering an internal developer portal." },
+        "expect": [
+          { "method": "sendMessage", "payload": { "text": "That’s worth unpacking before we build anything. What outcome matters most, and what constraint is most likely to shape the choice?" } }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "An ambiguous conversation does not launch work and an affirmative switches modes",
+    "steps": [
+      {
+        "send": { "text": "We have an idea for a service." },
+        "expect": [
+          { "method": "sendMessage", "payload": { "text": "That’s worth unpacking before we build anything. What outcome matters most, and what constraint is most likely to shape the choice?" } }
+        ]
+      },
+      {
+        "send": { "text": "Go ahead" },
+        "expect": [
+          { "method": "sendMessage", "payload": { "text": "Switching to Execution Mode. Tell me whether you want a project scaffold or a code snippet." } }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "A clear project request starts Execution Mode and collects its first parameter",
+    "steps": [
+      {
+        "send": { "text": "Please create a project for our API." },
+        "expect": [
+          { "method": "sendMessage", "payload": { "text": "Switching to Execution Mode to create your project." } },
+          { "method": "sendMessage", "payload": { "text": "What should this project be called? Use letters, numbers, hyphens, or underscores." } }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "An explicit mode request switches without guessing a task",
+    "steps": [
+      {
+        "send": { "text": "switch to execution mode" },
+        "expect": [
+          { "method": "sendMessage", "payload": { "text": "Switching to Execution Mode. Tell me whether you want a project scaffold or a code snippet." } }
+        ]
+      }
+    ]
+  }
+]
