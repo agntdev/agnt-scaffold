@@ -6,9 +6,10 @@ import { inlineButton, inlineKeyboard } from "../toolkit/index.js";
 
 const composer = new Composer<Ctx>();
 
-async function startTask(ctx: Ctx) {
+export async function startTask(ctx: Ctx) {
   const from = ctx.session.mode ?? "conversation";
   ctx.session.mode = "execution";
+  ctx.session.chatActive = false;
   ctx.session.awaitingExecutionApproval = undefined;
   if (ctx.from && from !== "execution") {
     await recordModeChange({ owner: String(ctx.from.id), from, to: "execution", timestamp: now().getTime(), reason: "manual agent activation" });
