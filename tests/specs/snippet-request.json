@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Code Snippet",
+    "steps": [
+      {
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Request a code snippet generation"
+            }
+          }
+        ],
+        "send": {
+          "callback": "snippet:request"
+        }
+      }
+    ]
+  }
+]
