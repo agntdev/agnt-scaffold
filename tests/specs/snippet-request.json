@@ -1,6 +1,8 @@
 [{"name":"code snippet generation and delivery","steps":[
 {"send":{"callback":"snippet:request"},"expect":[{"method":"sendMessage","payload":{"text":"Choose the kind of code snippet you need."}}]},
 {"send":{"callback":"snippet:type:Function"},"expect":[{"method":"sendMessage","payload":{"text":"Choose a language."}}]},
-{"send":{"callback":"snippet:language:TypeScript"},"expect":[{"method":"sendMessage","payload":{"text":"Describe the requirements for this snippet."}}]},
+{"send":{"callback":"snippet:language:TypeScript"},"expect":[{"method":"sendMessage","payload":{"text":"Choose how to generate the snippet."}}]},
+{"send":{"callback":"snippet:model:unavailable"},"expect":[{"method":"sendMessage","payload":{"text":"Nemotron 3 Ultra isn’t set up yet. Choose the built-in template or ask the owner to add the model key."}}]},
+{"send":{"callback":"snippet:model:template"},"expect":[{"method":"sendMessage","payload":{"text":"Describe the requirements for this snippet."}}]},
 {"send":{"text":"Validate incoming payloads and return typed errors."},"expect":[{"method":"sendMessage","payload":{"text":"Generating your code snippet now."}},{"method":"sendMessage"}]}
 ]}]

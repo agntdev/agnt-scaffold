@@ -9,6 +9,7 @@ export interface Session {
   step?: string;
   projectDraft?: Partial<ProjectParameters>;
   snippetDraft?: Partial<SnippetParameters>;
+  snippetModel?: "template" | "nemotron";
   revisionProjectId?: string;
 }
 
