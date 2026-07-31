@@ -8,6 +8,7 @@ import { beginProject } from "./newproject.js";
 import { beginSnippet } from "./snippet-request.js";
 import { startTask } from "./agent.js";
 import { inlineButton, inlineKeyboard } from "../toolkit/index.js";
+import { recoveryKeyboard } from "./issue-report.js";
 
 const composer = new Composer<Ctx>();
 
@@ -157,13 +158,21 @@ composer.on("message:text", async (ctx, next) => {
   await conversationalReply(ctx, text, nlu);
 });
 
-composer.command("chat", openChat);
+async function openChatSafely(ctx: Ctx) {
+  try {
+    await openChat(ctx);
+  } catch {
+    ctx.session.chatActive = false;
+    await ctx.reply("Sorry — I’m having trouble starting chat right now. Please try again in a moment.", { reply_markup: recoveryKeyboard() });
+  }
+}
+composer.command("chat", openChatSafely);
 composer.command("clear", async (ctx) => {
   if (ctx.from) await clearConversation(String(ctx.from.id));
   ctx.session.conversationContext = [];
   await ctx.reply("Your chat history is cleared.", { reply_markup: chatKeyboard() });
 });
-composer.callbackQuery("chat:open", async (ctx) => { await ctx.answerCallbackQuery(); await openChat(ctx); });
+composer.callbackQuery("chat:open", async (ctx) => { await ctx.answerCallbackQuery(); await openChatSafely(ctx); });
 composer.callbackQuery("chat:clear", async (ctx) => {
   await ctx.answerCallbackQuery();
   if (ctx.from) await clearConversation(String(ctx.from.id));

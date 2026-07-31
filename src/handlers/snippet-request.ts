@@ -5,6 +5,7 @@ import { recordBuild, recordModeChange, saveSnippet, snippetDocument } from "../
 import { generateNemotronSnippet, nemotronAvailable } from "../nemotron.js";
 import { inlineButton, inlineKeyboard, registerMainMenuItem } from "../toolkit/index.js";
 import { locale, tr } from "../i18n.js";
+import { recoveryKeyboard } from "./issue-report.js";
 registerMainMenuItem({ label: "Code snippet", data: "snippet:request", order: 20 });
 const composer = new Composer<Ctx>();
 async function tx(ctx: Ctx, key: string, english: string) { return tr(await locale(ctx), key, english); }
@@ -36,7 +37,17 @@ async function returnToConversation(ctx: Ctx, reason: string) {
   if (ctx.from && from !== "conversation") await recordModeChange({ owner: String(ctx.from.id), from, to: "conversation", timestamp: now().getTime(), reason });
   await ctx.reply("Done — returning to Conversation Mode.");
 }
-composer.callbackQuery("snippet:request", async (ctx) => { await ctx.answerCallbackQuery(); await beginSnippet(ctx); });
+async function startSnippetSafely(ctx: Ctx) {
+  try {
+    await beginSnippet(ctx);
+  } catch {
+    ctx.session.step = undefined;
+    ctx.session.snippetDraft = undefined;
+    ctx.session.snippetModel = undefined;
+    await ctx.reply("Sorry — I’m having trouble starting your code snippet right now. Please try again in a moment.", { reply_markup: recoveryKeyboard() });
+  }
+}
+composer.callbackQuery("snippet:request", async (ctx) => { await ctx.answerCallbackQuery(); await startSnippetSafely(ctx); });
 composer.callbackQuery(/^snippet:type:/, async (ctx) => { await ctx.answerCallbackQuery(); if (ctx.session.step !== "snippet:type") return; ctx.session.snippetDraft!.type = ctx.callbackQuery.data.slice(13); ctx.session.step = "snippet:language"; await ctx.reply(await tx(ctx, "chooseLanguage", "Choose a language."), { reply_markup: await languages(ctx) }); });
 composer.callbackQuery(/^snippet:language:/, async (ctx) => { await ctx.answerCallbackQuery(); if (ctx.session.step !== "snippet:language") return; ctx.session.snippetDraft!.language = ctx.callbackQuery.data.slice(17); ctx.session.step = "snippet:model"; await ctx.reply(await tx(ctx, "generateMethod", "Choose how to generate the snippet."), { reply_markup: models(ctx) }); });
 composer.callbackQuery("snippet:model:unavailable", async (ctx) => { await ctx.answerCallbackQuery(); if (ctx.session.step !== "snippet:model") return; await ctx.reply("Nemotron 3 Ultra isn’t set up yet. Choose the built-in template or ask the owner to add the model key.", { reply_markup: models(ctx) }); });

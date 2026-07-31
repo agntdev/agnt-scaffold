@@ -4,6 +4,8 @@ import { now } from "../clock.js";
 import { artifactFor, projectDocument, projectsFor, recordBuild, recordModeChange, recordRecent, saveProject, settings, type ProjectRecord } from "../domain.js";
 import { inlineButton, inlineKeyboard, registerMainMenuItem } from "../toolkit/index.js";
 import { locale, tr } from "../i18n.js";
+import { recoveryKeyboard } from "./issue-report.js";
+import { adminChatId } from "../runtime.js";
 
 registerMainMenuItem({ label: "New project", data: "project:new", order: 10 });
 const composer = new Composer<Ctx>();
@@ -77,14 +79,22 @@ async function returnToConversation(ctx: Ctx, reason: string) {
   await ctx.reply("Done — returning to Conversation Mode.");
 }
 async function notifyCompletion(ctx: Ctx, name: string) {
-  const cfg = await settings(); const admin = process.env.ADMIN_CHAT_ID;
+  const cfg = await settings(); const admin = adminChatId(ctx);
   if (!cfg.notificationsEnabled) return;
   if (!admin) { await ctx.reply("Group completion notifications aren’t set up yet."); return; }
   try { await ctx.api.sendMessage(admin, `CodeScaffold completed ${name}.`); } catch { /* A blocked or unavailable group must not fail delivery. */ }
 }
 
-composer.command("newproject", async (ctx) => { await beginProject(ctx); });
-composer.callbackQuery("project:new", async (ctx) => { await ctx.answerCallbackQuery(); await beginProject(ctx); });
+async function startProjectSafely(ctx: Ctx) {
+  try {
+    await beginProject(ctx);
+  } catch {
+    clear(ctx);
+    await ctx.reply("Sorry — I’m having trouble starting your project right now. Please try again in a moment.", { reply_markup: recoveryKeyboard() });
+  }
+}
+composer.command("newproject", startProjectSafely);
+composer.callbackQuery("project:new", async (ctx) => { await ctx.answerCallbackQuery(); await startProjectSafely(ctx); });
 composer.callbackQuery(/^project:language:/, async (ctx) => { await ctx.answerCallbackQuery(); if (ctx.session.step !== "project:language") return; ctx.session.projectDraft!.language = ctx.callbackQuery.data.slice("project:language:".length); await askFramework(ctx); });
 composer.callbackQuery(/^project:framework:/, async (ctx) => { await ctx.answerCallbackQuery(); if (ctx.session.step !== "project:framework") return; ctx.session.projectDraft!.framework = ctx.callbackQuery.data.slice("project:framework:".length); await askFeatures(ctx); });
 composer.callbackQuery(/^project:feature:/, async (ctx) => { await ctx.answerCallbackQuery(); if (ctx.session.step !== "project:features") return; const feature = ctx.callbackQuery.data.slice("project:feature:".length); const values = ctx.session.projectDraft!.features!; ctx.session.projectDraft!.features = values.includes(feature) ? values.filter((item) => item !== feature) : [...values, feature]; await ctx.reply(`${feature} ${values.includes(feature) ? "removed" : "added"}. Tap Done when you’re ready.`); });
