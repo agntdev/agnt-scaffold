@@ -9,7 +9,7 @@ export interface Session {
   step?: string;
   mode?: "conversation" | "execution";
   detectedLocale?: "hinglish";
-  conversationContext?: string[];
+  conversationContext?: Array<{ text: string; at: number }>;
   awaitingExecutionApproval?: boolean;
   projectDraft?: Partial<ProjectParameters>;
   snippetDraft?: Partial<SnippetParameters>;

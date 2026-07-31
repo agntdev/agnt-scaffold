@@ -44,6 +44,7 @@ export interface NluMetrics {
   humanQualityTotal: number;
   humanQualityCount: number;
 }
+export interface BuildMetrics { successful: number; failed: number; feedback: number; }
 
 const defaults: OwnerSettings = {
   languages: ["TypeScript", "Python", "Go"],
@@ -115,6 +116,15 @@ export async function recordConversationQuality(score: number): Promise<void> {
   if (!Number.isInteger(score) || score < 1 || score > 5) return;
   const previous = await nluMetrics();
   await write("nlu:metrics", { ...previous, humanQualityTotal: previous.humanQualityTotal + score, humanQualityCount: previous.humanQualityCount + 1 });
+}
+export async function buildMetrics(): Promise<BuildMetrics> { return (await read<BuildMetrics>("build:metrics")) ?? { successful: 0, failed: 0, feedback: 0 }; }
+export async function recordBuild(success: boolean): Promise<void> {
+  const previous = await buildMetrics();
+  await write("build:metrics", { ...previous, successful: previous.successful + (success ? 1 : 0), failed: previous.failed + (success ? 0 : 1) });
+}
+export async function recordCompletionFeedback(): Promise<void> {
+  const previous = await buildMetrics();
+  await write("build:metrics", { ...previous, feedback: previous.feedback + 1 });
 }
 
 /** Bounded analytics, kept behind an explicit index rather than a key scan. */

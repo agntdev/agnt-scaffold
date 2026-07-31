@@ -1,0 +1,14 @@
+[
+  {
+    "name": "/agent starts Execution Mode manually",
+    "steps": [
+      { "send": { "text": "/agent" }, "expect": [{ "method": "sendMessage", "payload": { "text": "Execution Mode is on. Tell me whether you want a project scaffold or a code snippet." } }] }
+    ]
+  },
+  {
+    "name": "Start task quick action starts Execution Mode",
+    "steps": [
+      { "send": { "callback": "agent:start" }, "expect": [{ "method": "answerCallbackQuery" }, { "method": "sendMessage", "payload": { "text": "Execution Mode is on. Tell me whether you want a project scaffold or a code snippet." } }] }
+    ]
+  }
+]
