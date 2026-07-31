@@ -8,7 +8,7 @@
           {
             "method": "sendMessage",
             "payload": {
-              "text": "Open the menu with /start, then choose a project, revision, or code snippet. You’ll answer one clear question at a time. Use /language to choose English or Hinglish."
+              "text": "Open the menu with /start, then choose a project, revision, or code snippet. Clear task requests automatically start Execution Mode; /agent and Start task do it manually. Hinglish is supported. Use /language to choose English or Hinglish."
             }
           }
         ]

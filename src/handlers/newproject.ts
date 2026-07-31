@@ -1,7 +1,7 @@
 import { Composer, InputFile } from "grammy";
 import type { Ctx, ProjectParameters } from "../bot.js";
 import { now } from "../clock.js";
-import { artifactFor, projectDocument, projectsFor, recordModeChange, recordRecent, saveProject, settings, type ProjectRecord } from "../domain.js";
+import { artifactFor, projectDocument, projectsFor, recordBuild, recordModeChange, recordRecent, saveProject, settings, type ProjectRecord } from "../domain.js";
 import { inlineButton, inlineKeyboard, registerMainMenuItem } from "../toolkit/index.js";
 import { locale, tr } from "../i18n.js";
 
@@ -62,10 +62,10 @@ async function generate(ctx: Ctx) {
   const instant = now().getTime(); const cfg = await settings(); const ordinal = (await projectsFor(String(ctx.from.id), instant)).length + 1; const id = `project-${ctx.from.id}-${ordinal}`;
   const record: ProjectRecord = { ...params, id, owner: String(ctx.from.id), createdAt: instant, artifact: artifactFor(id, String(ctx.from.id), "project", instant, cfg.retentionDays, params.name) };
   await ctx.reply(await tx(ctx, "generatedProject", "Generating your project now."));
-  await saveProject(record); await recordRecent(id); clear(ctx);
+  await saveProject(record); await recordRecent(id); await recordBuild(true); clear(ctx);
   const l = await locale(ctx);
   await ctx.replyWithDocument(new InputFile(new TextEncoder().encode(projectDocument(params, l)), `${params.name}-scaffold.md`));
-  await ctx.reply(l === "hinglish" ? `Tumhara ${params.name} scaffold ready hai. Is chat ke artifact delivery se download karo.\n\nInstall\nDependencies install karke README ke steps follow karo.\n\n${cfg.retentionDays} din tak available hai.` : `Your ${params.name} scaffold is ready. Download it from this chat’s artifact delivery.\n\nREADME\n${record.artifact.readme}\n\nInstall\n${record.artifact.installationInstructions}\n\nAvailable for ${cfg.retentionDays} days.`, { reply_markup: inlineKeyboard([[inlineButton(await tx(ctx, "requestRevision", "Request revision"), "revision:request"), inlineButton(await tx(ctx, "mainMenu", "Main menu"), "menu:main")]]) });
+  await ctx.reply(l === "hinglish" ? `Tumhara ${params.name} scaffold ready hai. Is chat ke artifact delivery se download karo.\n\nInstall\nDependencies install karke README ke steps follow karo.\n\n${cfg.retentionDays} din tak available hai.` : `Your ${params.name} scaffold is ready. Download it from this chat’s artifact delivery.\n\nREADME\n${record.artifact.readme}\n\nInstall\n${record.artifact.installationInstructions}\n\nAvailable for ${cfg.retentionDays} days.`, { reply_markup: inlineKeyboard([[inlineButton(await tx(ctx, "requestRevision", "Request revision"), "revision:request"), inlineButton("Share feedback", "feedback:complete")], [inlineButton(await tx(ctx, "mainMenu", "Main menu"), "menu:main")]]) });
   await notifyCompletion(ctx, params.name);
   await returnToConversation(ctx, "project completed");
 }

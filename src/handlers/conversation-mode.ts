@@ -9,7 +9,9 @@ import { beginSnippet } from "./snippet-request.js";
 const composer = new Composer<Ctx>();
 
 function remember(ctx: Ctx, text: string) {
-  ctx.session.conversationContext = [...(ctx.session.conversationContext ?? []), text].slice(-6);
+  const cutoff = now().getTime() - 24 * 60 * 60 * 1000;
+  const recent = (ctx.session.conversationContext ?? []).filter((item) => item.at >= cutoff);
+  ctx.session.conversationContext = [...recent, { text, at: now().getTime() }].slice(-20);
 }
 
 async function enterExecution(ctx: Ctx, reason: string) {
