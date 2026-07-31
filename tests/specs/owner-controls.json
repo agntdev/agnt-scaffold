@@ -1,0 +1,1 @@
+[{"name":"owner settings explain missing configuration","steps":[{"send":{"callback":"owner:settings"},"expect":[{"method":"sendMessage","payload":{"text":"Team settings aren’t set up yet."}}]}]}]

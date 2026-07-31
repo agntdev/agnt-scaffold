@@ -1,20 +1,6 @@
-[
-  {
-    "name": "Code Snippet",
-    "steps": [
-      {
-        "expect": [
-          {
-            "method": "sendMessage",
-            "payload": {
-              "text": "Request a code snippet generation"
-            }
-          }
-        ],
-        "send": {
-          "callback": "snippet:request"
-        }
-      }
-    ]
-  }
-]
+[{"name":"code snippet generation and delivery","steps":[
+{"send":{"callback":"snippet:request"},"expect":[{"method":"sendMessage","payload":{"text":"Choose the kind of code snippet you need."}}]},
+{"send":{"callback":"snippet:type:Function"},"expect":[{"method":"sendMessage","payload":{"text":"Choose a language."}}]},
+{"send":{"callback":"snippet:language:TypeScript"},"expect":[{"method":"sendMessage","payload":{"text":"Describe the requirements for this snippet."}}]},
+{"send":{"text":"Validate incoming payloads and return typed errors."},"expect":[{"method":"sendMessage","payload":{"text":"Generating your code snippet now."}},{"method":"sendMessage"}]}
+]}]

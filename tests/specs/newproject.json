@@ -1,20 +1,12 @@
-[
-  {
-    "name": "/newproject",
-    "steps": [
-      {
-        "expect": [
-          {
-            "method": "sendMessage",
-            "payload": {
-              "text": "Start a new project scaffolding flow"
-            }
-          }
-        ],
-        "send": {
-          "text": "/newproject"
-        }
-      }
-    ]
-  }
-]
+[{"name":"project generation from name to delivery","steps":[
+{"send":{"text":"/newproject"},"expect":[{"method":"sendMessage","payload":{"text":"What should this project be called? Use letters, numbers, hyphens, or underscores."}}]},
+{"send":{"text":"team-api"},"expect":[{"method":"sendMessage","payload":{"text":"Choose a language."}}]},
+{"send":{"callback":"project:language:TypeScript"},"expect":[{"method":"sendMessage","payload":{"text":"Choose a framework."}}]},
+{"send":{"callback":"project:framework:Node.js"},"expect":[{"method":"sendMessage","payload":{"text":"Choose the features to include. Tap Done when you’re ready."}}]},
+{"send":{"callback":"project:feature:API"},"expect":[{"method":"sendMessage","payload":{"text":"API added. Tap Done when you’re ready."}}]},
+{"send":{"callback":"project:features:done"},"expect":[{"method":"sendMessage","payload":{"text":"Choose a license."}}]},
+{"send":{"callback":"project:license:MIT"},"expect":[{"method":"sendMessage","payload":{"text":"Choose CI configuration."}}]},
+{"send":{"callback":"project:ci:GitHub-Actions"},"expect":[{"method":"sendMessage","payload":{"text":"Choose a test setup."}}]},
+{"send":{"callback":"project:tests:Unit-tests"},"expect":[{"method":"sendMessage","payload":{"text":"Review your project:\nteam-api · TypeScript · Node.js\nFeatures: API\nLicense: MIT\nCI: GitHub-Actions\nTests: Unit-tests"}}]},
+{"send":{"callback":"project:confirm"},"expect":[{"method":"sendMessage","payload":{"text":"Generating your project now."}},{"method":"sendMessage"}]}
+]}]
