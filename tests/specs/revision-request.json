@@ -1,20 +1,18 @@
 [
-  {
-    "name": "Request Revision",
-    "steps": [
-      {
-        "expect": [
-          {
-            "method": "sendMessage",
-            "payload": {
-              "text": "Request a revision of a previously generated project"
-            }
-          }
-        ],
-        "send": {
-          "callback": "revision:request"
-        }
-      }
-    ]
-  }
+  {"name":"revision request handles an empty project history","steps":[{"send":{"callback":"revision:request","userId":99,"chatId":99},"expect":[{"method":"sendMessage","payload":{"text":"No active projects yet — create a project first, then you can request a revision."}}]}]},
+  {"name":"revision collects changes and delivers an updated scaffold","steps":[
+    {"send":{"text":"/newproject","userId":42,"chatId":42},"expect":[{"method":"sendMessage"}]},
+    {"send":{"text":"revision-api","userId":42,"chatId":42},"expect":[{"method":"sendMessage","payload":{"text":"Choose a language."}}]},
+    {"send":{"callback":"project:language:TypeScript","userId":42,"chatId":42},"expect":[{"method":"sendMessage"}]},
+    {"send":{"callback":"project:framework:Node.js","userId":42,"chatId":42},"expect":[{"method":"sendMessage"}]},
+    {"send":{"callback":"project:features:done","userId":42,"chatId":42},"expect":[{"method":"sendMessage"}]},
+    {"send":{"callback":"project:license:MIT","userId":42,"chatId":42},"expect":[{"method":"sendMessage"}]},
+    {"send":{"callback":"project:ci:GitHub-Actions","userId":42,"chatId":42},"expect":[{"method":"sendMessage"}]},
+    {"send":{"callback":"project:tests:Unit-tests","userId":42,"chatId":42},"expect":[{"method":"sendMessage"}]},
+    {"send":{"callback":"project:confirm","userId":42,"chatId":42},"expect":[{"method":"sendMessage","payload":{"text":"Generating your project now."}}]},
+    {"send":{"callback":"revision:request","userId":42,"chatId":42},"expect":[{"method":"sendMessage","payload":{"text":"Choose a project to revise."}}]},
+    {"send":{"callback":"revision:select:project-42-1","userId":42,"chatId":42},"expect":[{"method":"sendMessage","payload":{"text":"Describe the changes you need. Include any framework, feature, CI, or test changes."}}]},
+    {"send":{"text":"Add Docker and integration tests.","userId":42,"chatId":42},"expect":[{"method":"sendMessage","payload":{"text":"Review these changes:\nAdd Docker and integration tests.\n\nGenerate the revision?"}}]},
+    {"send":{"callback":"revision:confirm","userId":42,"chatId":42},"expect":[{"method":"sendMessage","payload":{"text":"Generating your revised project now."}},{"method":"sendMessage"}]}
+  ]}
 ]

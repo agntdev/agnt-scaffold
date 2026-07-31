@@ -1,17 +1,13 @@
 import { Composer } from "grammy";
-
-// SCAFFOLD — generated from the bot blueprint BEFORE the agent runs.
-// Keep a LIVE registration (.command / .callbackQuery / …) so this feature is
-// never an empty stub. Replace the reply body with real logic + copy; if you
-// change the user-facing text, update tests/specs to match EXACTLY.
-// Do NOT rewrite src/bot.ts — buildBot() already auto-loads this module.
-// Menu: wire this into /start via registerMainMenuItem({ label: "Request Revision", data: "revision:request" }) if the toolkit exposes it.
-
-const composer = new Composer();
-
-composer.callbackQuery("revision:request", async (ctx) => {
-  await ctx.answerCallbackQuery();
-  await ctx.reply("Request a revision of a previously generated project");
-});
-
+import type { Ctx } from "../bot.js";
+import { now } from "../clock.js";
+import { artifactFor, projectsFor, recordRecent, saveProject, settings } from "../domain.js";
+import { inlineButton, inlineKeyboard, registerMainMenuItem } from "../toolkit/index.js";
+registerMainMenuItem({ label: "Request revision", data: "revision:request", order: 30 });
+const composer = new Composer<Ctx>();
+composer.callbackQuery("revision:request", async (ctx) => { await ctx.answerCallbackQuery(); if (!ctx.from) return; const projects = await projectsFor(String(ctx.from.id), now().getTime()); if (!projects.length) { await ctx.reply("No active projects yet — create a project first, then you can request a revision.", { reply_markup: inlineKeyboard([[inlineButton("New project", "project:new"), inlineButton("Main menu", "menu:main")]]) }); return; } ctx.session.step = "revision:select"; await ctx.reply("Choose a project to revise.", { reply_markup: inlineKeyboard([...projects.slice(0, 8).map((project) => [inlineButton(project.name, `revision:select:${project.id}`)]), [inlineButton("Cancel", "revision:cancel")]]) }); });
+composer.callbackQuery(/^revision:select:/, async (ctx) => { await ctx.answerCallbackQuery(); if (ctx.session.step !== "revision:select") return; ctx.session.revisionProjectId = ctx.callbackQuery.data.slice(16); ctx.session.step = "revision:changes"; await ctx.reply("Describe the changes you need. Include any framework, feature, CI, or test changes.", { reply_markup: inlineKeyboard([[inlineButton("Cancel", "revision:cancel")]]) }); });
+composer.callbackQuery("revision:cancel", async (ctx) => { await ctx.answerCallbackQuery(); ctx.session.step = undefined; ctx.session.revisionProjectId = undefined; await ctx.reply("This revision request was cancelled."); });
+composer.callbackQuery("revision:confirm", async (ctx) => { await ctx.answerCallbackQuery(); if (!ctx.from || ctx.session.step !== "revision:confirm" || !ctx.session.revisionProjectId) return; const existing = (await projectsFor(String(ctx.from.id), now().getTime())).find((project) => project.id === ctx.session.revisionProjectId); if (!existing) { ctx.session.step = undefined; await ctx.reply("That project is no longer available. Create a new project to continue."); return; } const instant = now().getTime(); const cfg = await settings(); const id = `project-${instant}-${ctx.from.id}`; const revised = { ...existing, id, createdAt: instant, artifact: artifactFor(id, String(ctx.from.id), "project", instant, cfg.retentionDays, `${existing.name} revision`) }; await ctx.reply("Generating your revised project now."); await saveProject(revised); await recordRecent(id); ctx.session.step = undefined; ctx.session.revisionProjectId = undefined; await ctx.reply(`Your revised ${existing.name} scaffold is ready. Download it from this chat’s artifact delivery.\n\nAvailable for ${cfg.retentionDays} days.`, { reply_markup: inlineKeyboard([[inlineButton("Main menu", "menu:main")]]) }); });
+composer.on("message:text", async (ctx, next) => { if (ctx.session.step !== "revision:changes") return next(); const changes = ctx.message.text.trim(); if (changes.length < 5 || changes.length > 1000) { await ctx.reply("Describe the changes in 5–1,000 characters."); return; } ctx.session.step = "revision:confirm"; await ctx.reply(`Review these changes:\n${changes}\n\nGenerate the revision?`, { reply_markup: inlineKeyboard([[inlineButton("Generate revision", "revision:confirm"), inlineButton("Cancel", "revision:cancel")]]) }); });
 export default composer;
