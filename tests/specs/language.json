@@ -1,0 +1,24 @@
+[
+  {
+    "name": "a user can select Hinglish and receive a localized project prompt",
+    "steps": [
+      { "send": { "text": "/language", "userId": 73, "chatId": 73 }, "expect": [{ "method": "sendMessage", "payload": { "text": "Choose your preferred language." } }] },
+      { "send": { "callback": "language:set:hinglish", "userId": 73, "chatId": 73 }, "expect": [{ "method": "sendMessage", "payload": { "text": "Hinglish set ho gaya. Aage ke messages Hinglish mein aayenge." } }] },
+      { "send": { "callback": "project:new", "userId": 73, "chatId": 73 }, "expect": [{ "method": "sendMessage", "payload": { "text": "Project ka naam kya hoga? Letters, numbers, hyphens, ya underscores use karo." } }] }
+    ]
+  },
+  {
+    "name": "Romanized Hindi input detects Hinglish without explicit selection",
+    "steps": [
+      { "send": { "text": "mera project kya karna hai", "userId": 74, "chatId": 74 }, "expect": [{ "method": "sendMessage", "payload": { "text": "Hinglish detect hua. Aage ke messages Hinglish mein aayenge." } }] },
+      { "send": { "callback": "snippet:request", "userId": 74, "chatId": 74 }, "expect": [{ "method": "sendMessage", "payload": { "text": "Jo code snippet chahiye uska type choose karo." } }] }
+    ]
+  },
+  {
+    "name": "mixed English and Romanized Hindi input retains Hinglish for flows",
+    "steps": [
+      { "send": { "text": "dependencies add karo", "userId": 75, "chatId": 75 }, "expect": [{ "method": "sendMessage", "payload": { "text": "Hinglish detect hua. Aage ke messages Hinglish mein aayenge." } }] },
+      { "send": { "callback": "project:new", "userId": 75, "chatId": 75 }, "expect": [{ "method": "sendMessage", "payload": { "text": "Project ka naam kya hoga? Letters, numbers, hyphens, ya underscores use karo." } }] }
+    ]
+  }
+]
