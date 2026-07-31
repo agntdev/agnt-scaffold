@@ -28,6 +28,8 @@ export interface OwnerSettings {
   notificationsEnabled: boolean;
 }
 
+export interface UserSettings { locale: "english" | "hinglish"; }
+
 const defaults: OwnerSettings = {
   languages: ["TypeScript", "Python", "Go"],
   frameworks: ["Node.js", "FastAPI", "Go standard library"],
@@ -65,6 +67,8 @@ function createRedisClient(url: string) {
     get: async (key: string) => (await ready()).get(key),
     set: async (key: string, value: string) => (await ready()).set(key, value),
     del: async (key: string) => (await ready()).del(key),
+    // Required by the toolkit adapter interface. Domain reads always use the
+    // explicit project indexes above; this method is never used to enumerate data.
     keys: async (key: string) => (await ready()).keys(key),
   };
 }
@@ -77,6 +81,14 @@ async function write<T>(key: string, value: T): Promise<void> {
 }
 function projectKey(id: string) { return `project:${id}`; }
 function userIndex(owner: string) { return `owner:${owner}:projects`; }
+function userSettingsKey(owner: string) { return `user:${owner}:settings`; }
+
+export async function userLocale(owner: string): Promise<"english" | "hinglish"> {
+  return (await read<UserSettings>(userSettingsKey(owner)))?.locale ?? "english";
+}
+export async function saveUserLocale(owner: string, locale: "english" | "hinglish"): Promise<void> {
+  await write(userSettingsKey(owner), { locale });
+}
 
 export async function settings(): Promise<OwnerSettings> {
   return (await read<OwnerSettings>("settings")) ?? defaults;
@@ -121,8 +133,9 @@ export function artifactFor(id: string, owner: string, kind: Artifact["kind"], n
   };
 }
 
-export function projectDocument(params: ProjectParameters): string {
+export function projectDocument(params: ProjectParameters, locale: "english" | "hinglish" = "english"): string {
   const features = params.features.length ? params.features.join(", ") : "No optional features";
+  if (locale === "hinglish") return `# ${params.name}\n\nGenerated scaffold\n\n- Language: ${params.language}\n- Framework: ${params.framework}\n- Features: ${features}\n- License: ${params.license}\n- CI: ${params.ci}\n- Tests: ${params.tests}\n\n## Install\n\nApne ${params.framework} setup ko follow karo, dependencies install karo, phir configured test command run karo.\n`;
   return `# ${params.name}\n\nGenerated scaffold\n\n- Language: ${params.language}\n- Framework: ${params.framework}\n- Features: ${features}\n- License: ${params.license}\n- CI: ${params.ci}\n- Tests: ${params.tests}\n\n## Install\n\nFollow your ${params.framework} setup, install dependencies, then run the configured test command.\n`;
 }
 
