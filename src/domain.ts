@@ -29,6 +29,13 @@ export interface OwnerSettings {
 }
 
 export interface UserSettings { locale: "english" | "hinglish"; }
+export interface ModeChangeEvent {
+  owner: string;
+  from: "conversation" | "execution";
+  to: "conversation" | "execution";
+  timestamp: number;
+  reason: string;
+}
 
 const defaults: OwnerSettings = {
   languages: ["TypeScript", "Python", "Go"],
@@ -88,6 +95,12 @@ export async function userLocale(owner: string): Promise<"english" | "hinglish">
 }
 export async function saveUserLocale(owner: string, locale: "english" | "hinglish"): Promise<void> {
   await write(userSettingsKey(owner), { locale });
+}
+
+/** Bounded analytics, kept behind an explicit index rather than a key scan. */
+export async function recordModeChange(event: ModeChangeEvent): Promise<void> {
+  const previous = (await read<ModeChangeEvent[]>("mode-change-events")) ?? [];
+  await write("mode-change-events", [event, ...previous].slice(0, 500));
 }
 
 export async function settings(): Promise<OwnerSettings> {

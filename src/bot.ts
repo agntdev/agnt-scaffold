@@ -7,6 +7,9 @@ import type { StorageAdapter } from "grammy";
 // persistent storage (see AGENTS.md).
 export interface Session {
   step?: string;
+  mode?: "conversation" | "execution";
+  conversationContext?: string[];
+  awaitingExecutionApproval?: boolean;
   projectDraft?: Partial<ProjectParameters>;
   snippetDraft?: Partial<SnippetParameters>;
   snippetModel?: "template" | "nemotron";
@@ -64,7 +67,7 @@ export interface BuildBotOptions {
  */
 export async function buildBot(token: string, opts: BuildBotOptions = {}) {
   const bot = createBot<Session>(token, {
-    initial: () => ({}),
+    initial: () => ({ mode: "conversation", conversationContext: [] }),
     storage: opts.storage,
     telemetryEnv: opts.telemetryEnv,
     telemetryReporterOptions: opts.telemetryReporterOptions,
