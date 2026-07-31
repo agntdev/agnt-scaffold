@@ -2,12 +2,13 @@ import { Composer } from "grammy";
 import type { Ctx } from "../bot.js";
 import { now } from "../clock.js";
 import { nluMetrics, recentProjects, recordConversationQuality, saveSettings, settings } from "../domain.js";
+import { adminChatId } from "../runtime.js";
 import { inlineButton, inlineKeyboard, registerMainMenuItem } from "../toolkit/index.js";
 registerMainMenuItem({ label: "Team settings", data: "owner:settings", order: 40 });
 const composer = new Composer<Ctx>();
-function admin(ctx: Ctx): boolean { return Boolean(process.env.ADMIN_CHAT_ID && String(ctx.from?.id) === process.env.ADMIN_CHAT_ID); }
+function admin(ctx: Ctx): boolean { const id = adminChatId(ctx); return Boolean(id && String(ctx.from?.id) === id); }
 async function show(ctx: Ctx) { const cfg = await settings(); await ctx.reply(`Team defaults\nLanguages: ${cfg.languages.join(", ")}\nFrameworks: ${cfg.frameworks.join(", ")}\nRetention: ${cfg.retentionDays} days\nGroup notifications: ${cfg.notificationsEnabled ? "on" : "off"}`, { reply_markup: inlineKeyboard([[inlineButton("Languages", "owner:languages"), inlineButton("Frameworks", "owner:frameworks")], [inlineButton("Toggle notifications", "owner:toggle-notifications")], [inlineButton("Retention: 30 days", "owner:retention:30")], [inlineButton("Recent projects", "owner:history")], [inlineButton("Conversation metrics", "owner:nlu-metrics")], [inlineButton("Main menu", "menu:main")]]) }); }
-composer.callbackQuery("owner:settings", async (ctx) => { await ctx.answerCallbackQuery(); if (!process.env.ADMIN_CHAT_ID) { await ctx.reply("Team settings aren’t set up yet."); return; } if (!admin(ctx)) { await ctx.reply("Only the team owner can change these settings."); return; } await show(ctx); });
+composer.callbackQuery("owner:settings", async (ctx) => { await ctx.answerCallbackQuery(); if (!adminChatId(ctx)) { await ctx.reply("Team settings aren’t set up yet."); return; } if (!admin(ctx)) { await ctx.reply("Only the team owner can change these settings."); return; } await show(ctx); });
 composer.callbackQuery("owner:toggle-notifications", async (ctx) => { await ctx.answerCallbackQuery(); if (!admin(ctx)) return; const cfg = await settings(); await saveSettings({ ...cfg, notificationsEnabled: !cfg.notificationsEnabled }); await show(ctx); });
 composer.callbackQuery("owner:retention:30", async (ctx) => { await ctx.answerCallbackQuery(); if (!admin(ctx)) return; const cfg = await settings(); await saveSettings({ ...cfg, retentionDays: 30 }); await show(ctx); });
 composer.callbackQuery("owner:languages", async (ctx) => { await ctx.answerCallbackQuery(); if (!admin(ctx)) return; await ctx.reply("Choose the default language set.", { reply_markup: inlineKeyboard([[inlineButton("TypeScript and Python", "owner:languages:ts-py")], [inlineButton("Go and TypeScript", "owner:languages:go-ts")]]) }); });

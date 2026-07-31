@@ -1,0 +1,16 @@
+[
+  {
+    "name": "main flow entrypoints respond from the menu",
+    "steps": [
+      { "send": { "text": "/start", "userId": 201, "chatId": 201 }, "expect": [{ "method": "sendMessage", "payload": { "text": "Build a project scaffold or request a focused code snippet." } }] },
+      { "send": { "callback": "project:new", "userId": 201, "chatId": 201 }, "expect": [{ "method": "answerCallbackQuery" }, { "method": "sendMessage", "payload": { "text": "Switching to Execution Mode to create your project." } }, { "method": "sendMessage", "payload": { "text": "What should this project be called? Use letters, numbers, hyphens, or underscores." } }] }
+    ]
+  },
+  {
+    "name": "coding and chat start from their menu actions",
+    "steps": [
+      { "send": { "callback": "snippet:request", "userId": 202, "chatId": 202 }, "expect": [{ "method": "answerCallbackQuery" }, { "method": "sendMessage", "payload": { "text": "Switching to Execution Mode to generate your code snippet." } }, { "method": "sendMessage", "payload": { "text": "Choose the kind of code snippet you need." } }] },
+      { "send": { "callback": "chat:open", "userId": 202, "chatId": 202 }, "expect": [{ "method": "answerCallbackQuery" }, { "method": "sendMessage", "payload": { "text": "Chat is ready. Send a message to discuss an idea, ask a question, or think something through." } }] }
+    ]
+  }
+]

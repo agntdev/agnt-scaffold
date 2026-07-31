@@ -3,6 +3,7 @@ import type { Ctx } from "../bot.js";
 import { mainMenuKeyboard } from "../toolkit/index.js";
 import { inlineButton, inlineKeyboard } from "../toolkit/index.js";
 import { locale, tr } from "../i18n.js";
+import { recoveryKeyboard } from "./issue-report.js";
 
 // The /start handler renders the bot's MAIN MENU — the primary way users operate
 // a button-first bot. A feature adds its own button by calling
@@ -24,9 +25,13 @@ async function menu(ctx: Ctx) {
 async function welcome(ctx: Ctx) { const l = await locale(ctx); return tr(l, "welcome", "Build a project scaffold or request a focused code snippet."); }
 
 composer.command("start", async (ctx) => {
-  ctx.session.mode = "conversation";
-  ctx.session.awaitingExecutionApproval = undefined;
-  await ctx.reply(await welcome(ctx), { reply_markup: await menu(ctx) });
+  try {
+    ctx.session.mode = "conversation";
+    ctx.session.awaitingExecutionApproval = undefined;
+    await ctx.reply(await welcome(ctx), { reply_markup: await menu(ctx) });
+  } catch {
+    await ctx.reply("Sorry — I’m having trouble starting right now. Please try again in a moment.", { reply_markup: recoveryKeyboard() });
+  }
 });
 
 // "Back to menu" — re-render the main menu in place from any sub-view.
