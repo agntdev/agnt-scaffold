@@ -36,6 +36,14 @@ export interface ModeChangeEvent {
   timestamp: number;
   reason: string;
 }
+export interface NluMetrics {
+  total: number;
+  hinglishDetected: number;
+  fallbacks: number;
+  confidenceTotal: number;
+  humanQualityTotal: number;
+  humanQualityCount: number;
+}
 
 const defaults: OwnerSettings = {
   languages: ["TypeScript", "Python", "Go"],
@@ -95,6 +103,18 @@ export async function userLocale(owner: string): Promise<"english" | "hinglish">
 }
 export async function saveUserLocale(owner: string, locale: "english" | "hinglish"): Promise<void> {
   await write(userSettingsKey(owner), { locale });
+}
+
+const initialNluMetrics: NluMetrics = { total: 0, hinglishDetected: 0, fallbacks: 0, confidenceTotal: 0, humanQualityTotal: 0, humanQualityCount: 0 };
+export async function nluMetrics(): Promise<NluMetrics> { return (await read<NluMetrics>("nlu:metrics")) ?? initialNluMetrics; }
+export async function recordNluObservation(language: "english" | "hinglish", confidence: number, fallback: boolean): Promise<void> {
+  const previous = await nluMetrics();
+  await write("nlu:metrics", { ...previous, total: previous.total + 1, hinglishDetected: previous.hinglishDetected + (language === "hinglish" ? 1 : 0), fallbacks: previous.fallbacks + (fallback ? 1 : 0), confidenceTotal: previous.confidenceTotal + confidence });
+}
+export async function recordConversationQuality(score: number): Promise<void> {
+  if (!Number.isInteger(score) || score < 1 || score > 5) return;
+  const previous = await nluMetrics();
+  await write("nlu:metrics", { ...previous, humanQualityTotal: previous.humanQualityTotal + score, humanQualityCount: previous.humanQualityCount + 1 });
 }
 
 /** Bounded analytics, kept behind an explicit index rather than a key scan. */

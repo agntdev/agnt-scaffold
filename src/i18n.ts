@@ -1,5 +1,6 @@
 import type { Ctx } from "./bot.js";
 import { userLocale } from "./domain.js";
+import { classifyInput } from "./nlu.js";
 
 export type Locale = "english" | "hinglish";
 
@@ -48,7 +49,7 @@ const hinglish: Record<string, string> = {
 };
 
 export async function locale(ctx: Ctx): Promise<Locale> {
-  return ctx.from ? userLocale(String(ctx.from.id)) : "english";
+  return ctx.session.detectedLocale ?? (ctx.from ? userLocale(String(ctx.from.id)) : "english");
 }
 
 export function tr(localeName: Locale, key: string, english: string): string {
@@ -56,7 +57,5 @@ export function tr(localeName: Locale, key: string, english: string): string {
 }
 
 export function hasHinglish(text: string): boolean {
-  const normalized = text.toLowerCase().replace(/[^a-z\s]/g, " ");
-  return /\b(mera|meri|kya|karna|karo|hai|hain|chahiye|banao|kaise|aur|naya)\b/.test(normalized)
-    || (/\bdependencies\b/.test(normalized) && /\badd\b/.test(normalized));
+  return classifyInput(text).language === "hinglish";
 }

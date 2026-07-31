@@ -8,17 +8,16 @@
     ]
   },
   {
-    "name": "Romanized Hindi input detects Hinglish without explicit selection",
+    "name": "Romanized Hindi keeps its style and asks a useful follow-up",
     "steps": [
-      { "send": { "text": "mera project kya karna hai", "userId": 74, "chatId": 74 }, "expect": [{ "method": "sendMessage", "payload": { "text": "Hinglish detect hua. Aage ke messages Hinglish mein aayenge." } }] },
+      { "send": { "text": "mera idea weak lag raha hai", "userId": 74, "chatId": 74 }, "expect": [{ "method": "sendMessage", "payload": { "text": "Achha point hai. Sabse pehle kaunsa outcome important hai, aur kaunsi constraint decision ko shape karegi?" } }] },
       { "send": { "callback": "snippet:request", "userId": 74, "chatId": 74 }, "expect": [{ "method": "sendMessage", "payload": { "text": "Jo code snippet chahiye uska type choose karo." } }] }
     ]
   },
   {
-    "name": "mixed English and Romanized Hindi input retains Hinglish for flows",
+    "name": "mixed English and Romanized Hindi starts a localized project flow",
     "steps": [
-      { "send": { "text": "dependencies add karo", "userId": 75, "chatId": 75 }, "expect": [{ "method": "sendMessage", "payload": { "text": "Hinglish detect hua. Aage ke messages Hinglish mein aayenge." } }] },
-      { "send": { "callback": "project:new", "userId": 75, "chatId": 75 }, "expect": [{ "method": "sendMessage", "payload": { "text": "Project ka naam kya hoga? Letters, numbers, hyphens, ya underscores use karo." } }] }
+      { "send": { "text": "mera naya API project banao", "userId": 75, "chatId": 75 }, "expect": [{ "method": "sendMessage", "payload": { "text": "Project ka naam kya hoga? Letters, numbers, hyphens, ya underscores use karo." } }] }
     ]
   }
 ]

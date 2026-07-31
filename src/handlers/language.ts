@@ -20,6 +20,7 @@ composer.callbackQuery(/^language:set:(english|hinglish)$/, async (ctx) => {
   if (!ctx.from) return;
   const selected = ctx.match[1] as "english" | "hinglish";
   await saveUserLocale(String(ctx.from.id), selected);
+  ctx.session.detectedLocale = selected === "hinglish" ? "hinglish" : undefined;
   await ctx.reply(selected === "hinglish" ? tr("hinglish", "languageSaved", "") : "English is set. Future messages will be in English.");
 });
 composer.on("message:text", async (ctx, next) => {

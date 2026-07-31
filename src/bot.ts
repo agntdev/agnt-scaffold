@@ -8,6 +8,7 @@ import type { StorageAdapter } from "grammy";
 export interface Session {
   step?: string;
   mode?: "conversation" | "execution";
+  detectedLocale?: "hinglish";
   conversationContext?: string[];
   awaitingExecutionApproval?: boolean;
   projectDraft?: Partial<ProjectParameters>;
